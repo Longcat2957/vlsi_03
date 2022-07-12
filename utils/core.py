@@ -8,13 +8,34 @@ class PreProcessor(object):
     """
     
     """
-    def __init__(self, imgsz):
-        self.imgsz = imgsz
+    def __init__(self, imgsz:tuple):
+        self.imgsz = imgsz  # 목표로 하는 크기
+        self.target_h, self.target_w = self.imgsz[0], self.imgsz[1]
+        self.area = self.imgsz[0] * self.imgsz[1] # 면적의 크기, 보간법을 서로 다르게 한다.
 
     def __call__(self, raw_input):
+        return  self._preproc(raw_input)
+    
+    def _preproc(self, image):
+        if len(image.shape) == 3:
+            padded_img = np.ones((self.target_h, self.target_w, 3)) * 114.0     # color(3 channels)
+        else:
+            padded_img = np.ones(self.imgsz) * 114.0                            # greyscale
 
+        img = np.array(image)
+        r = min(self.target_h / img.shape[0], self.target_w / img.shape[1])
+        resized_img = cv2.resize(
+            img,
+            (int(img.shape[1] * r), int(img.shape[0] * r)),
+            interpolation=cv2.INTER_LINEAR
+        ).astype(np.float32)
+        padded_img[: int(img.shape[0] * r), : int(img.shape[1] * r)] = resized_img
+        padded_img = padded_img[:, :, ::-1]
+        padded_img /= 255.0
 
-        return
+        padded_img = padded_img.transpose((2, 0, 1))
+        padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
+        return padded_img, r
 
 
 class BaseEngine(object):
@@ -24,8 +45,6 @@ class BaseEngine(object):
     """
     def __init__(self, engine_path, imgsz=(480, 640)):
         self.imgsz = imgsz
-        self.mean = None
-        self.std = None
         self.n_classes = 80
         self.class_name = [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
          'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
@@ -41,12 +60,10 @@ class BaseEngine(object):
         runtime = trt.Runtime(logger)
         with open(engine_path, "rb") as f:
             serialized_engine = f.read()
-
         engine = runtime.deserialize_cuda_engine(serialized_engine)
         self.context = engine.create_execution_context()
         self.inputs, self.outputs, self.bindings = [], [], []
         self.stream = cuda.Stream()
-
         for binding in engine:
             size = trt.volume(engine.get_binding_shape(binding))
             dtype = trt.nptype(engine.get_binding_dtype(binding))
@@ -58,28 +75,21 @@ class BaseEngine(object):
             else:
                 self.outputs.append({'host': host_mem, 'device': device_mem})
 
-    def __call__(self, img:np.ndarray) -> list:
-        """
-        type of img : numpy.ndarray
-        """
+    def __call__(self, img):
         self.inputs[0]['host'] = np.ravel(img)
-        # transfer data to gpu
+        # transfer data to the gpu
         for inp in self.inputs:
             cuda.memcpy_htod_async(inp['device'], inp['host'], self.stream)
-        
         # run inference
         self.context.execute_async_v2(
-            bindings = self.bindings,
-            stream_handle = self.stream.handle
-        )
-
+            bindings=self.bindings,
+            stream_handle=self.stream.handle)
         # fetch outputs from gpu
         for out in self.outputs:
             cuda.memcpy_dtoh_async(out['host'], out['device'], self.stream)
-
         # synchronize stream
         self.stream.synchronize()
-        
+
         data = [out['host'] for out in self.outputs]
         predictions = np.reshape(data, (1, -1, int(5+self.n_classes)))[0]
         return predictions
@@ -90,13 +100,13 @@ class PostProcessor(object):
     
     """
     def __init__(self, conf_scores, nms_thr):
-        self.conf_socres = conf_scores
+        self.conf_scores = conf_scores
         self.nms_thr = nms_thr
 
-    def __call__(self, predictions):
-        return self._postprocess(predictions)
+    def __call__(self, predictions, ratio):
+        return self.postprocess(predictions, ratio)
 
-    def _postprocess(self, predictions):
+    def postprocess(self, predictions, ratio):
         boxes = predictions[:, :4]
         scores = predictions[:, 4:5] * predictions[:, 5:]
         boxes_xyxy = np.ones_like(boxes)
@@ -104,11 +114,11 @@ class PostProcessor(object):
         boxes_xyxy[:, 1] = boxes[:, 1] - boxes[:, 3] / 2.
         boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.
         boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.
-
-        dets = self._multiclass_nms(boxes_xyxy, scores)
+        boxes_xyxy /= ratio
+        dets = self.multiclass_nms(boxes_xyxy, scores)
         return dets
 
-    def _nms(self, boxes, scores):
+    def nms(self, boxes, scores):
         x1 = boxes[:, 0]
         y1 = boxes[:, 1]
         x2 = boxes[:, 2]
@@ -129,23 +139,25 @@ class PostProcessor(object):
             w = np.maximum(0.0, xx2 - xx1 + 1)
             h = np.maximum(0.0, yy2 - yy1 + 1)
             inter = w * h
-            ovr = inter / (areas[i] + areas[order[1:] - inter])
+            ovr = inter / (areas[i] + areas[order[1:]] - inter)
+            
             inds = np.where(ovr <= self.nms_thr)[0]
             order = order[inds + 1]
+        
         return keep
     
-    def _multiclass_nms(self, boxes, scores):
+    def multiclass_nms(self, boxes, scores):
         final_dets = []
         num_classes = scores.shape[1]
         for cls_ind in range(num_classes):
             cls_scores = scores[:, cls_ind]
-            valid_score_mask = cls_scores > self.conf_socres
+            valid_score_mask = cls_scores > self.conf_scores
             if valid_score_mask.sum() == 0:
                 continue
             else:
                 valid_scores = cls_scores[valid_score_mask]
                 valid_boxes = boxes[valid_score_mask]
-                keep = self._nms(valid_boxes, valid_scores, self.nms_thr)
+                keep = self.nms(valid_boxes, valid_scores)
                 if len(keep) > 0:
                     cls_inds = np.ones((len(keep), 1)) * cls_ind
                     dets = np.concatenate(
@@ -155,6 +167,7 @@ class PostProcessor(object):
         if len(final_dets) == 0:
             return None
         return np.concatenate(final_dets, 0)
+
 
 class Visualizer(object):
     """
@@ -173,10 +186,10 @@ class YOLOv7_engine(BaseEngine):
     """
     
     """
-    def __init__(self, engine_path, imgsz):
-        super(YOLOv7_engine, self).__init__(engine_path, imgsz)
+    def __init__(self, engine_path, imgsz=(480, 640)):
+        super(YOLOv7_engine, self).__init__(engine_path)
         self.imgsz = imgsz
-        self.n_classes = 80 # COCO Detection
+        self.n_classes = 80
         self.class_names = [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
          'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
          'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
@@ -188,22 +201,34 @@ class YOLOv7_engine(BaseEngine):
          'hair drier', 'toothbrush' ]
 
 
+
 if __name__ == '__main__':
     """
     Debug PreProcessor, BaseEngine, PostProcessor, Visualizer
     
     """
     test_engine_path = '../model/yolov7_480x640.engine'
-    test_image_path = '../src/test1.jpeg'                       # 디버깅용 피클을 만들어야 할듯 ㅠ
+    test_image_path = '../src/test1.jpeg'
+
+    test_img = cv2.imread(test_image_path)
+    print()
+    print(f'입력 이미지의 shape = {test_img.shape}')
+    ############################################################### << debug
+    
+    # test PreProcessor class
+    test_pre_processor = PreProcessor((480, 640))
+    dummy_input, ratio = test_pre_processor(test_img)
+    print(f'PreProcessor 클래스에 의해 (C, H, W)로 변환 / 변환비율 = {dummy_input.shape} / ratio={ratio}')
+    ############################################################### << debug
 
     # test YOLOv7_engine class
-    dummy_input = np.ndarray((1, 3, 480, 640), dtype=np.float16)
-    test_yolov7_engine = YOLOv7_engine(engine_path = test_engine_path, imgsz=(480, 640))
+    test_yolov7_engine = YOLOv7_engine(test_engine_path, imgsz=(480, 640))
     dummy_output = test_yolov7_engine(dummy_input)
-    print(dummy_output.shape)
+    print(f'TensorRT에 의한 추론 결과, reshape 포함 = {dummy_output.shape}')
+    ############################################################### << debug
 
     # test PostProcessor class
     test_post_processor = PostProcessor(0.45 ,0.1)
-    dummy_output_2 = test_post_processor(dummy_output)
-    print(dummy_output_2.shape)
-    print("Test Complete !")
+    dummy_output_2 = test_post_processor(dummy_output, ratio)
+    print(f'Multi-Class NMS에 의한 중복된 박스 제거 = {dummy_output_2.shape}')
+    print()
