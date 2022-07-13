@@ -119,6 +119,10 @@ class PostProcessor(object):
         return dets
 
     def nms(self, boxes, scores):
+        '''
+        Non-Max-Suppression
+        
+        '''
         x1 = boxes[:, 0]
         y1 = boxes[:, 1]
         x2 = boxes[:, 2]
@@ -217,6 +221,7 @@ if __name__ == '__main__':
     
     # test PreProcessor class
     test_pre_processor = PreProcessor((480, 640))
+    dummy_input, ratio = test_pre_processor._preproc(test_img)
     dummy_input, ratio = test_pre_processor(test_img)
     print(f'PreProcessor 클래스에 의해 (C, H, W)로 변환 / 변환비율 = {dummy_input.shape} / ratio={ratio}')
     ############################################################### << debug
