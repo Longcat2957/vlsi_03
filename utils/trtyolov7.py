@@ -9,6 +9,8 @@ from core import PreProcessor, YOLOv7_engine, PostProcessor, Visualizer
 class YOLOv7_trt_unit(object):
     """
     Unifed Inference Class
+    ======================
+    임의의 cv2 인풋을 받아 object detection 결과를 리턴합니다.
     """
     def __init__(self, engine_path:str, infer_size:tuple, vis_size:tuple, obj_class_list:list, conf_scores:float, nms_thr:float, verbose:bool):
         # *.trt, *.engine weight path

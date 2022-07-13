@@ -4,9 +4,9 @@ import pycuda.driver as cuda
 import numpy as np
 import cv2
 
-class PreProcessor(object):
+class YoloPreProcessor(object):
     """
-    
+    YOLO-PreProcessor
     """
     def __init__(self, imgsz:tuple):
         self.imgsz = imgsz  # 목표로 하는 크기
@@ -38,7 +38,7 @@ class PreProcessor(object):
         return padded_img, r
 
 
-class BaseEngine(object):
+class YoloBaseEngine(object):
     """
     YOLOv5, YOLOv6, YOLOv7 compatible base engine class
     https://github.com/Linaom1214/tensorrt-python/blob/main/utils/utils.py
@@ -94,7 +94,7 @@ class BaseEngine(object):
         predictions = np.reshape(data, (1, -1, int(5+self.n_classes)))[0]
         return predictions
 
-class PostProcessor(object):
+class YoloPostProcessor(object):
     """
     
     
@@ -169,25 +169,72 @@ class PostProcessor(object):
         return np.concatenate(final_dets, 0)
 
 
-class Visualizer(object):
+class YoloVisualizer(object):
     """
+    YOLO-series Visualizer
+    ======================    
+    """
+    def __init__(self, model_shape:tuple ,output_size:tuple, frame:int, format:str):
+        self.tensor_shape = model_shape
+        if isinstance(output_size, int):
+            self.output_size = (output_size, output_size)
+        elif isinstance(output_size, tuple):
+            self.output_size = output_size
+        
+        self.frame = frame
+        self.format = format
+        self.ratio = self._get_ratio()
+
+    def set_size(self, size):
+        if isinstance(size, int):
+            self.output_size = (size, size)
+        elif isinstance(size, tuple):
+            self.output_size = size
+        return f'output_size = {self.output_size}'
+
+    def set_frame(self, frame):
+        if isinstance(frame, int):
+            self.frame = frame
+        return f'frame = {self.frame}'
     
-    """
-    def __init__(self):
+    def __call__(self, orig_img, dets):
 
         pass
 
-    def __call__(self):
+    def _draw_point(self, point:tuple):
+
+        pass
+
+    def _draw_line(self, start:tuple, end:tuple):
+
+        pass
+
+    def _draw_boxes(self, boxes):
+
+        pass
+
+    def _write_text(self, position:tuple, message:str):
+
+        pass
+
+    def _get_ratio(self):
+        if self.tensor_shape == self.output_size:
+            return True
+        else:
+            return (self.output_size[0] / self.tensor_shape[0]) , (self.output_size[1], self.tensor_shape[1])
+
+    def _vis(self, orig_img, dets):
 
         pass
 
 
-class YOLOv7_engine(BaseEngine):
+
+class YOLOv7Engine(YoloBaseEngine):
     """
     
     """
     def __init__(self, engine_path, imgsz=(480, 640)):
-        super(YOLOv7_engine, self).__init__(engine_path)
+        super(YOLOv7Engine, self).__init__(engine_path)
         self.imgsz = imgsz
         self.n_classes = 80
         self.class_names = [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
@@ -216,19 +263,22 @@ if __name__ == '__main__':
     ############################################################### << debug
     
     # test PreProcessor class
-    test_pre_processor = PreProcessor((480, 640))
+    test_pre_processor = YoloPreProcessor((480, 640))
     dummy_input, ratio = test_pre_processor(test_img)
     print(f'PreProcessor 클래스에 의해 (C, H, W)로 변환 / 변환비율 = {dummy_input.shape} / ratio={ratio}')
     ############################################################### << debug
 
     # test YOLOv7_engine class
-    test_yolov7_engine = YOLOv7_engine(test_engine_path, imgsz=(480, 640))
+    test_yolov7_engine = YOLOv7Engine(test_engine_path, imgsz=(480, 640))
     dummy_output = test_yolov7_engine(dummy_input)
     print(f'TensorRT에 의한 추론 결과, reshape 포함 = {dummy_output.shape}')
     ############################################################### << debug
 
     # test PostProcessor class
-    test_post_processor = PostProcessor(0.45 ,0.1)
+    test_post_processor = YoloPostProcessor(0.45 ,0.1)
     dummy_output_2 = test_post_processor(dummy_output, ratio)
     print(f'Multi-Class NMS에 의한 중복된 박스 제거 = {dummy_output_2.shape}')
-    print()
+    
+
+    # test Visualizer class
+    test_vis = YoloVisualizer((480, 640), 720, 60, 'RGB')
