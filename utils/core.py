@@ -202,7 +202,7 @@ if __name__ == '__main__':
     
     """
     test_engine_path = '../model/yolov7_480x640.engine'
-    test_image_path = '../src/test1.jpeg'
+    test_image_path = '../input/test1.jpeg'
 
     test_img = cv2.imread(test_image_path)
     print()
