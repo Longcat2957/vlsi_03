@@ -25,7 +25,7 @@ class VideoSequence(object):
             T, C, H, W = self.buffer.shape
             return T
         
-        else:   # if self.buffer = None
+        else:
             return 0
 
     def clear(self):
