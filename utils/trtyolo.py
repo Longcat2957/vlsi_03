@@ -7,11 +7,23 @@ import numpy as np
 from core import YoloPreProcessor, YOLOv7Engine, YoloPostProcessor
 from visualizer import YoloObjects, YoloVisualizer
 
-class YOLOv7_trt_unit(object):
+class YOLOv7_Inference_Block(object):
     """
-    Unifed Inference Class
+    Object Detsction Inference Block
     ======================
     임의의 cv2 인풋을 받아 object detection 결과를 리턴합니다.
+
+    ----------------------
+    ATTRIBUTS //
+    engine_path : *.trt, *.engine의 directory
+    infer_size : 추론 모델의 입력 텐서 shape
+    conf_score : confidence threshold(default = 0.45)
+    nms_thr : non-maximum-supression threshold(default = 0.1)
+
+    ----------------------
+    METHOD //
+    infer(orig_img) -> dets:np.ndarray : 추론을 수행한다. (with rescale)
+
     """
     def __init__(self, engine_path:str, infer_size:tuple, conf_scores:float, nms_thr:float, verbose:bool):
         # *.trt, *.engine weight path
@@ -45,7 +57,7 @@ if __name__ == '__main__':
 
     test_img = cv2.imread(test_image_path)
 
-    myunit = YOLOv7_trt_unit(test_engine_path, (480, 640), 0.45, 0.1, False)
+    myunit = YOLOv7_Inference_Block(test_engine_path, (480, 640), 0.45, 0.1, False)
     dets = myunit.infer(test_img)
     
 
