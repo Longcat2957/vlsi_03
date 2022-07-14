@@ -92,11 +92,10 @@ class YoloVisualizer(Visualizer):
         super(YoloVisualizer, self).__init__(model_shape, model_output)
 
     def __call__(self, orig_img, dets):
-        r1, r2 = self._get_ratio()
         for det in dets:
             *boxes, p, c = det
-            rboxes = np.array(boxes) * np.array([r1, r2, r1, r2])
-            rboxes = rboxes.astype(np.int32)
+            boxes = np.array(boxes)
+            rboxes = boxes.astype(np.int32)
             orig_img = self._draw_boxes(orig_img, rboxes)
         
         return orig_img
