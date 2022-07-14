@@ -41,8 +41,7 @@ class Visualizer(object):
             self.output_size = (output_size, output_size)
         elif isinstance(output_size, tuple):
             self.output_size = output_size
-        
-        self.ratio = self._get_ratio()
+
         self.color = (0, 0, 255)
         self.thickness = 3
         self.font = cv2.FONT_HERSHEY_PLAIN
@@ -79,11 +78,6 @@ class Visualizer(object):
         orig_img = cv2.putText(orig_img, message, position, self.font, 1, self.color, self.thickness)
         return orig_img
 
-    def _get_ratio(self):
-        if self.tensor_shape == self.output_size:
-            return True
-        else:
-            return (self.output_size[0] / self.tensor_shape[0] , self.output_size[1] / self.tensor_shape[1])
 
 
 class YoloVisualizer(Visualizer):
