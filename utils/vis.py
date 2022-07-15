@@ -3,7 +3,7 @@ import pycuda.autoinit
 import pycuda.driver as cuda
 import numpy as np
 import cv2
-from utils.obj import YoloObjects
+from obj import YoloObjects
 
 class Visualizer(object):
     """

@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-from utils.core import Cv2PreProcessor
 
 # ROI_Extractor
 # VideoSequence 객체
@@ -36,8 +35,6 @@ class VideoSequenceObjects(object):
     def __init__(self, frame=16, shape=(224, 224)):
         self.frame = frame
         self.shape = shape
-        
-        self.transformer = Cv2PreProcessor(shape)
         self.buffer = None
 
     def __bool__(self):
@@ -59,17 +56,14 @@ class VideoSequenceObjects(object):
 
     def push(self, input):
         if self.buffer == None:
-            resized, _ = self.transformer(input)
-            resized = np.reshape(resized, (1, 3, self.shape[0], self.shape[1]))
-            self.buffer = resized
+            self.buffer = input
         else:
-            input, _ = self.transformer(input)
-            input = np.reshape(input, (1, 3, self.shape[0], self.shape[1]))
             self.buffer = np.concatenate(self.buffer, input, axis=0)
     
     def pull(self):
         copy = self.buffer
         return copy
+
 
 if __name__ == '__main__':
 
@@ -77,7 +71,7 @@ if __name__ == '__main__':
     print(bool(sequence))
     print(len(sequence))
     
-    random_frame = np.ndarray((400, 600, 3))
+    random_frame = np.ndarray((1, 3, 224, 224))
     sequence.push(random_frame)
 
     print(bool(sequence))
