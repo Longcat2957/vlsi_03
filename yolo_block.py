@@ -5,7 +5,8 @@ import cv2
 import numpy as np
 
 from utils.core import Cv2PreProcessor, YOLOv7Engine, YoloPostProcessor
-from utils.vis import YoloObjects, YoloVisualizer
+from utils.vis import YoloVisualizer
+from utils.obj import YoloObjects
 
 class YOLOv7_Inference_Block(object):
     """
@@ -52,8 +53,8 @@ class YOLOv7_Inference_Block(object):
         return x
 
 if __name__ == '__main__':
-    test_engine_path = '../model/yolov7_480x640.engine'
-    test_image_path = '../input/test1.jpeg'
+    test_engine_path = './model/yolov7_480x640.engine'
+    test_image_path = './input/test1.jpeg'
 
     test_img = cv2.imread(test_image_path)
 
@@ -71,3 +72,5 @@ if __name__ == '__main__':
     cv2.imshow('image', test_img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+    print('done')
