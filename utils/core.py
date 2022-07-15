@@ -6,7 +6,11 @@ import cv2
 
 class Cv2PreProcessor(object):
     """
-    np.ndarray(H, W, C) --> np.ndarray(C, H, W)
+    Cv2 형식의 np.ndarray를 torch type의 np.ndarray로 변환합니다.
+    TensorRT 호환성을 위해 np.ascontiguousarray의 결과를 리턴합니다.
+
+    __init__ : imgsz:tuple
+    __call__ : orig_img:np.ndarray(H, W, C) --> Tensor_input:np.ndarray(C, H, W)
     """
     def __init__(self, imgsz:tuple):
         self.imgsz = imgsz  # 목표로 하는 크기
@@ -42,6 +46,9 @@ class YoloBaseEngine(object):
     """
     YOLOv5, YOLOv6, YOLOv7 compatible base engine class
     https://github.com/Linaom1214/tensorrt-python/blob/main/utils/utils.py
+    
+    __init__ : engine_path:str, imgsz(=neural network input shape):tuple
+    __call__ : np.ndarray(C, H, W) --> np.ndarray(C, H, W)
     """
     def __init__(self, engine_path, imgsz=(480, 640)):
         self.imgsz = imgsz
@@ -96,8 +103,10 @@ class YoloBaseEngine(object):
 
 class YoloPostProcessor(object):
     """
-    
-    
+    TensorRT 또는 ONNX-Runtime의 출력 텐서를 nms+multiclass_nms를 통해 후처리합니다.
+
+    __init__ : conf_scores:float, nms_thr:float
+    __call__ : np.ndarray(B, _, 85) --> np.ndarray(B, _, 6)
     """
     def __init__(self, conf_scores, nms_thr):
         self.conf_scores = conf_scores
@@ -178,7 +187,7 @@ class YoloPostProcessor(object):
 
 class YOLOv7Engine(YoloBaseEngine):
     """
-    
+    Yolov7 engine
     """
     def __init__(self, engine_path, imgsz=(480, 640)):
         super(YOLOv7Engine, self).__init__(engine_path)
