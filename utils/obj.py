@@ -39,12 +39,15 @@ class VideoSequenceObjects(object):
 
     def __bool__(self):
         if isinstance(self.buffer, np.ndarray):
-            return True
+            if self.__len__() == 16:
+                return True
+            else:
+                False
         else:
-            return False
+            return None
 
     def __len__(self):
-        if self.__bool__():
+        if isinstance(self.buffer, np.ndarray):
             T, C, H, W = self.buffer.shape
             return T
         
