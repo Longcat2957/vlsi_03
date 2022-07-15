@@ -4,7 +4,7 @@ import sys
 import cv2
 import numpy as np
 
-from utils.core import YoloPreProcessor, YOLOv7Engine, YoloPostProcessor
+from utils.core import Cv2PreProcessor, YOLOv7Engine, YoloPostProcessor
 from utils.vis import YoloObjects, YoloVisualizer
 
 class YOLOv7_Inference_Block(object):
@@ -40,7 +40,7 @@ class YOLOv7_Inference_Block(object):
         self.verbose = verbose
 
         # unit's cores
-        self.preprocessor = YoloPreProcessor(self.infer_size)
+        self.preprocessor = Cv2PreProcessor(self.infer_size)
         self.tensorrt_engine = YOLOv7Engine(self.engine_path, self.infer_size)
         self.postprocessor = YoloPostProcessor(self.conf_scores, self.nms_thr)
 
