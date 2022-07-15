@@ -3,32 +3,7 @@ import pycuda.autoinit
 import pycuda.driver as cuda
 import numpy as np
 import cv2
-
-class YoloObjects(object):
-    '''
-    YoloObjects Class
-    =================
-    limitation:list 에 근거하여 목표로 한 클래스를 제외하고 리턴한다.
-    '''
-    def __init__(self, limitation=None):
-        self.org_dets = None    # type : numpy.ndarray | example : (N, 6)
-        self.limitation = limitation
-        self.dets = None
-
-    def __call__(self, dets):
-        self.load_dets(dets)
-        self._discard()
-        return self.dets
-
-    def load_dets(self, dets):
-        self.org_dets = dets
-
-    def _discard(self):
-        n, _ = self.org_dets.shape
-        class_array = self.org_dets[:, 5].flatten()
-        valid = np.array([x in self.limitation for x in class_array])
-        self.dets = self.org_dets[valid]
-
+from obj import YoloObjects
 
 class Visualizer(object):
     """

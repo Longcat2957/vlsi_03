@@ -34,7 +34,9 @@ class LoadImage(object):
         return property
 
 class LoadVideo(object):
-    
+    '''
+    Return property, cv2.VideoCapture(object)
+    '''
     def __init__(self):
         self.video_format = ['.avi', '.mp4']
     
@@ -70,4 +72,5 @@ if __name__ == '__main__':
     test_LoadVideo = LoadVideo()
     test_LoadVideo('./test2.mp4')
     test_LoadImage = LoadImage()
-    shape, orig_img = test_LoadImage('test1.jpeg')
+    shape, orig_img = test_LoadImage('../input/test1.jpeg')
+    print('done')

@@ -4,9 +4,9 @@ import pycuda.driver as cuda
 import numpy as np
 import cv2
 
-class YoloPreProcessor(object):
+class Cv2PreProcessor(object):
     """
-    YOLO-PreProcessor
+    np.ndarray(H, W, C) --> np.ndarray(C, H, W)
     """
     def __init__(self, imgsz:tuple):
         self.imgsz = imgsz  # 목표로 하는 크기
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     ############################################################### << debug
     
     # test PreProcessor class
-    test_pre_processor = YoloPreProcessor((480, 640))
+    test_pre_processor = Cv2PreProcessor((480, 640))
     dummy_input, ratio = test_pre_processor._preproc(test_img)
     dummy_input, ratio = test_pre_processor(test_img)
     print(f'PreProcessor 클래스에 의해 (C, H, W)로 변환 / 변환비율 = {dummy_input.shape} / ratio={ratio}')

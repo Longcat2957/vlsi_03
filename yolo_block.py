@@ -4,8 +4,8 @@ import sys
 import cv2
 import numpy as np
 
-from core import YoloPreProcessor, YOLOv7Engine, YoloPostProcessor
-from visualizer import YoloObjects, YoloVisualizer
+from utils.core import YoloPreProcessor, YOLOv7Engine, YoloPostProcessor
+from utils.vis import YoloObjects, YoloVisualizer
 
 class YOLOv7_Inference_Block(object):
     """
