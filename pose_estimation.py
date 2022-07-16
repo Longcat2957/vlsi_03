@@ -33,7 +33,7 @@ if __name__ == '__main__':
     print(f'preds, {preds}')
     
     def draw_point(orig_img, point:tuple):
-        orig_img = cv2.line(orig_img, point, point, (0, 0, 255), 4)
+        orig_img = cv2.line(orig_img, point, point, (255, 0, 255), 4)
         return orig_img
     
     for i in range(17):

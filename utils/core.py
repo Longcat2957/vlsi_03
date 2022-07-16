@@ -189,7 +189,7 @@ class PoseHeatmapPostProcessor(object):
     def __call__(self, heatmap, ratio):
         preds, maxvals = self._getmaxpredicts(heatmap)
         preds /= ratio
-        preds *= 4
+        preds *= 4.0
         return preds.astype(np.int32), maxvals
 
     def _getmaxpredicts(self, hmap):
