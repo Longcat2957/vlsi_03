@@ -203,7 +203,7 @@ class YOLOv7Engine(YoloBaseEngine):
          'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
          'hair drier', 'toothbrush' ]
 
-
+    
 
 if __name__ == '__main__':
     """
