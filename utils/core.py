@@ -186,8 +186,10 @@ class PoseHeatmapPostProcessor(object):
     """
     Heatmap --> preds, maxvals
     """
-    def __call__(self, heatmap):
-        return self._getmaxpredicts(heatmap)
+    def __call__(self, heatmap, ratio):
+        preds, maxvals = self._getmaxpredicts(heatmap)
+        preds /= ratio
+        return preds, maxvals
 
     def _getmaxpredicts(self, hmap):
         num_joints, H, W = hmap.shape
@@ -205,6 +207,7 @@ class PoseHeatmapPostProcessor(object):
 
         preds *= pred_mask     #pred= pred* pres_mask
         return preds, maxvals
+    
 
 class YOLOv7Engine(YoloBaseEngine):
     """
