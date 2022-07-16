@@ -182,8 +182,29 @@ class YoloPostProcessor(object):
         return np.concatenate(final_dets, 0)
 
 
+class PoseHeatmapPostProcessor(object):
+    """
+    Heatmap --> preds, maxvals
+    """
+    def __call__(self, heatmap):
+        return self._getmaxpredicts(heatmap)
 
+    def _getmaxpredicts(self, hmap):
+        num_joints, H, W = hmap.shape
+        hmap_flatten = hmap.reshape((num_joints, H*W)) 
+        idx = np.argmax(hmap_flatten, 1).reshape(num_joints, 1)
+        maxvals = np.amax(hmap_flatten, 1).resape(num_joints, 1)
+        
+        preds = np.tile(idx,(1,2)).astype(np.float32)
 
+        preds[:,0] = (preds[:,0]) % W
+        preds[:,1] = np.floor((preds[:, 1])/W)
+
+        pred_mask = np.tile(np.greater(maxvals, 0.0), (1,2))
+        pred_mask = pred_mask.astype(np.float32)
+
+        preds *= pred_mask     #pred= pred* pres_mask
+        return preds, maxvals
 
 class YOLOv7Engine(YoloBaseEngine):
     """
@@ -203,7 +224,7 @@ class YOLOv7Engine(YoloBaseEngine):
          'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
          'hair drier', 'toothbrush' ]
 
-    
+
 
 if __name__ == '__main__':
     """
