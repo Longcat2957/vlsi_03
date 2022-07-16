@@ -1,6 +1,6 @@
-import tensorrt as trt
-import pycuda.autoinit
-import pycuda.driver as cuda
+#import tensorrt as trt
+#import pycuda.autoinit
+#import pycuda.driver as cuda
 import numpy as np
 import cv2
 
@@ -193,7 +193,7 @@ class PoseHeatmapPostProcessor(object):
         num_joints, H, W = hmap.shape
         hmap_flatten = hmap.reshape((num_joints, H*W)) 
         idx = np.argmax(hmap_flatten, 1).reshape(num_joints, 1)
-        maxvals = np.amax(hmap_flatten, 1).resape(num_joints, 1)
+        maxvals = np.amax(hmap_flatten, 1).reshape(num_joints, 1)
         
         preds = np.tile(idx,(1,2)).astype(np.float32)
 
