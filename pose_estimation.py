@@ -11,7 +11,7 @@ if __name__ == '__main__':
     model.eval()
     
     
-    input_file_path = './input/human.jpeg'
+    input_file_path = './input/test2.jpeg'
     image_loader = LoadImage()
     shape, orig_img = image_loader(input_file_path)
     print(shape)
@@ -29,13 +29,8 @@ if __name__ == '__main__':
     # print(output_tensor.shape)
     
     posepost = PoseHeatmapPostProcessor()
-    preds, _ = posepost(output_tensor)
-    preds *= 4
-    
-    preds[:, 0] *= (487/256)
-    preds[:, 1] *= (386/192)
-    preds = preds.astype(np.int16)
-    # print(preds)
+    preds, _ = posepost(output_tensor, ratio)
+    print(f'preds, {preds}')
     
     def draw_point(orig_img, point:tuple):
         orig_img = cv2.line(orig_img, point, point, (0, 0, 255), 4)
@@ -48,4 +43,3 @@ if __name__ == '__main__':
     cv2.imshow('test', orig_img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-        
