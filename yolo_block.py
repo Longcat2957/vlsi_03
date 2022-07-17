@@ -66,7 +66,7 @@ if __name__ == '__main__':
     yoloobjects = YoloObjects(limitations)
     fdets = yoloobjects(dets)
 
-    myyolovis = YoloVisualizer((480, 640), (576, 768))
+    myyolovis = YoloVisualizer()
     
     final = myyolovis(test_img, fdets)
     cv2.imshow('image', test_img)
