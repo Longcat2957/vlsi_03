@@ -4,6 +4,40 @@ import cv2
 # ROI_Extractor
 # VideoSequence 객체
 
+class CocoPoseObjects(object):
+    '''
+    CocoPoseObjects Class
+    '''
+    def __init__(self, line:bool):
+        self.line = line
+        self.coco_skeletons = [
+            [15,13],[13,11],[16,14],[14,12],[11,12],[5,11],[6,12], [5,6],[5,7],
+            [6,8],[7,9],[8,10],[1,2],[0,1],[0,2],[1,3],[2,4],[3,5],[4,6]
+        ]
+    def __call__(self, orig_property:dict, pdets:np.ndarray):
+        limit = orig_property['shape'][1:]
+        visibility = self._get_visible_points(limit, pdets)
+        lines = self._get_lines(visibility, pdets)
+        return pdets, lines
+
+    def _get_visible_points(self, limitation:tuple, points:np.ndarray):
+        xl, yl = limitation[1], limitation[0]
+        arrx, arry = points[:, 0], points[:, 1]
+        return np.array([arrx[i] < xl and arry[i] < yl for i in range(17)])
+
+    def _get_lines(self, visibility, points:np.ndarray):
+        if self.line:
+            lines = []
+            valid = np.argwhere(visibility)
+            for l in self.coco_skeletons:
+                p1, p2 = l[0], l[1]
+                if p1 in valid and p2 in valid:
+                    lines.append((points[p1], points[p2]))
+            
+            return lines
+        else:
+            return None
+
 class YoloObjects(object):
     '''
     YoloObjects Class
