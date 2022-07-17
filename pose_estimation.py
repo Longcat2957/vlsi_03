@@ -6,6 +6,7 @@ from utils.io import LoadImage
 from utils.core import Cv2PreProcessor
 from utils.core import PoseHeatmapPostProcessor
 from utils.obj import CocoPoseObjects
+from utils.vis import CocoPoseVisualizer
 
 if __name__ == '__main__':
     model = torch.hub.load('yangsenius/TransPose:main', 'tph_a4_256x192', pretrained=True)
@@ -37,23 +38,9 @@ if __name__ == '__main__':
     cocoposeobj = CocoPoseObjects(True)
 
     pdets, lines = cocoposeobj(orig_property, preds)
-    print(lines)
 
-    
-    def draw_point(orig_img, point:tuple):
-        orig_img = cv2.line(orig_img, point, point, (255, 0, 255), 4)
-        return orig_img
-    
-    for p in pdets:
-        orig_img = draw_point(orig_img, p)
-
-    def draw_line(orig_img, start:tuple, end:tuple):
-        orig_img = cv2.line(orig_img, start, end, (0, 255, 0), 1)
-        return orig_img
-
-    for l in lines:
-        s, e = l
-        orig_img = draw_line(orig_img, s, e)
+    cocoposevis = CocoPoseVisualizer()
+    orig_img = cocoposevis(orig_img, pdets, lines)
 
 
     cv2.imshow('test', orig_img)

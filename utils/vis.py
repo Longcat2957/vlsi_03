@@ -60,6 +60,18 @@ class YoloVisualizer(Visualizer):
         
         return orig_img
 
+class CocoPoseVisualizer(Visualizer):
+
+    def __init__(self):
+        super(CocoPoseVisualizer, self).__init__()
+    
+    def __call__(self, orig_img, pdets, lines):
+        for p in pdets:
+            orig_img = self._draw_point(orig_img, p)
+        for l in lines:
+            s, e = l
+            orig_img = self._draw_line(orig_img, s, e)
+        return orig_img
 
 
 if __name__ == '__main__':
