@@ -58,10 +58,13 @@ class YoloObjects(object):
         self.org_dets = dets
 
     def _discard(self):
-        n, _ = self.org_dets.shape
-        class_array = self.org_dets[:, 5].flatten()
-        valid = np.array([x in self.limitation for x in class_array])
-        self.dets = self.org_dets[valid]
+        try:
+            n, _ = self.org_dets.shape
+            class_array = self.org_dets[:, 5].flatten()
+            valid = np.array([x in self.limitation for x in class_array])
+            self.dets = self.org_dets[valid]
+        except:
+            pass
 
 
 class VideoSequenceObjects(object):
