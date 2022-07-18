@@ -44,6 +44,27 @@ class Visualizer(object):
         orig_img = cv2.putText(orig_img, message, position, self.chr_font, 1, self.chr_color, self.chr_thickness)
         return orig_img
 
+    def _draw_point_ws(self, orig_img, point:tuple, shift:tuple):
+        point = (point[0] + shift[0], point[1] + shift[1])
+        orig_img = cv2.line(orig_img, point, point, self.point_color, self.point_thickness)
+        return orig_img
+
+    def _draw_line_ws(self, orig_img, start:tuple, end:tuple, shift:tuple):
+        start = (start[0] + shift[0], start[1] + shift[1])
+        end = (end[0] + shift[0], end[1] + shift[1])
+        orig_img = cv2.line(orig_img, start, end, self.line_color, self.line_thickness)
+        return orig_img
+
+    def _draw_boxes_ws(self, orig_img, boxes, shift:tuple):
+        pt1, pt2 = (boxes[0] + shift[0], boxes[1] + shift[1]), (boxes[2] + shift[0], boxes[3] + shift[1])
+        out = cv2.rectangle(orig_img, pt1, pt2, self.box_color, self.box_thickness)
+        return out
+
+    def _write_text(self, orig_img, position:tuple, message:str, shift:tuple):
+        position = (position[0] + shift[0], position[1] +shift[1])
+        orig_img = cv2.putText(orig_img, message, position, self.chr_font, 1, self.chr_color, self.chr_thickness)
+        return orig_img
+
 
 
 class YoloVisualizer(Visualizer):
