@@ -8,6 +8,7 @@ from utils.core import Cv2PreProcessor, YOLOv7Engine, YoloPostProcessor
 from utils.vis import YoloVisualizer
 from utils.obj import YoloObjects
 from utils.ext import RoiExtractor
+from tools.benchmark import timer
 
 class YOLOv7_Inference_Block(object):
     """
@@ -49,6 +50,7 @@ class YOLOv7_Inference_Block(object):
     def __call__(self, input):
         return self.infer(input)
 
+    #@timer
     def infer(self, input):
         x, r = self.preprocessor(input)
         x = self.tensorrt_engine(x)
