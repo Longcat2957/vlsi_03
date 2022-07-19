@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from core.common import Cv2PreProcessor
+from .core.common import Cv2PreProcessor
 
 # ROI_Extractor
 # VideoSequence 객체
