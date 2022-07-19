@@ -47,8 +47,7 @@ class ActionRecognitionBaseEngine(object):
         self.stream.synchronize()
 
         data = [out['host'] for out in self.outputs]
-        predictions = data[0]
-        predictions = predictions.flatten()
+        predictions = np.reshape(data, (1, 101))[0]
         return predictions
 
 
