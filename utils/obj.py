@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from .core.common import Cv2PreProcessor
+from copy import deepcopy
 
 # ROI_Extractor
 # VideoSequence 객체
@@ -85,7 +86,7 @@ class VideoSequenceObjects(object):
 
     def push(self, input):
         input = self._preproc(input)
-        if self.buffer == None:
+        if self.buffer is None:
             self.buffer = input
         else:
             self.buffer = np.concatenate((self.buffer, input), axis=0)
@@ -96,19 +97,19 @@ class VideoSequenceObjects(object):
             
             if length > self.frame:
                 stride = length // self.frame
-                out = self.buffer[0:stride * (self.frame - 1) + 1:stride, :, :, :]
+                out = deepcopy(self.buffer[0:stride * (self.frame - 1) + 1:stride, :, :, :])
                 self.clear()
                 return out
 
             elif length == self.frame:
-                out = self.buffer
+                out = deepcopy(self.buffer)
                 self.clear()
                 return out
             
             elif length < self.frame:
                 padding = self.frame - length
                 surplus = np.zeros((padding, 3, 224, 224))
-                out = np.concatenate((surplus, self.buffer), axis=0)
+                out = deepcopy(np.concatenate((surplus, self.buffer), axis=0))
                 self.clear()
                 return out
         else:

@@ -29,7 +29,7 @@ if __name__ == '__main__':
     inference_block = PoseInferenceBlock(engine_path, 17, (256, 192))
     video_idx = 0
 
-    cam = cv2.VideoCapture(video_idx)
+    cam = cv2.VideoCapture('input/test11.mp4')
 
     WIDTH = 640
     HEIGHT = 480
@@ -42,12 +42,14 @@ if __name__ == '__main__':
     while cv2.waitKey(1) < 1:
         grabbed, orig_img = cam.read()
         if not grabbed:
+            print('error')
             exit()
 
 
         preds, _ = inference_block(orig_img)    #discard maxvals
         pose_obj = CocoPoseObjects(True)
         pdets, lines = pose_obj(preds)
+
 
         pose_vis = CocoPoseVisualizer()
         final = pose_vis(orig_img, pdets, lines)

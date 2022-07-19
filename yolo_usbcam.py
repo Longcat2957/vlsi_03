@@ -64,7 +64,7 @@ if __name__ == '__main__':
     yolo_visualizer = YoloVisualizer()
 
     #################################
-    cam = cv2.VideoCapture(video_idx)
+    cam = cv2.VideoCapture('input/test11.mp4')
 
     WIDTH = 640
     HEIGHT = 480
@@ -85,3 +85,6 @@ if __name__ == '__main__':
         dets = yolo_obj(dets)
         yolo_img = yolo_visualizer(orig_img, dets)
         cv2.imshow('test', yolo_img)
+    
+    cv2.destroyAllWindows()
+    print('done')
