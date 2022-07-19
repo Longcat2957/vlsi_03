@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from core.common import Cv2PreProcessor
 
 # ROI_Extractor
 # VideoSequence 객체
@@ -64,21 +65,18 @@ class VideoSequenceObjects(object):
         self.frame = frame
         self.shape = shape
         self.buffer = None
+        self.tranformer = Cv2PreProcessor(shape)
 
     def __bool__(self):
         if isinstance(self.buffer, np.ndarray):
-            if self.__len__() == 16:
-                return True
-            else:
-                False
+            return True
         else:
-            return None
+            return False
 
     def __len__(self):
         if isinstance(self.buffer, np.ndarray):
             T, C, H, W = self.buffer.shape
             return T
-        
         else:
             return 0
 
@@ -86,15 +84,42 @@ class VideoSequenceObjects(object):
         self.buffer = None
 
     def push(self, input):
+        input = self._preproc(input)
         if self.buffer == None:
             self.buffer = input
         else:
-            self.buffer = np.concatenate(self.buffer, input, axis=0)
+            self.buffer = np.concatenate((self.buffer, input), axis=0)
     
     def pull(self):
-        copy = self.buffer
-        return copy
+        if isinstance(self.buffer, np.ndarray):
+            length = len(self.buffer)
+            
+            if length > self.frame:
+                stride = length // self.frame
+                out = self.buffer[0:stride * (self.frame - 1) + 1:stride, :, :, :]
+                self.clear()
+                return out
 
+            elif length == self.frame:
+                out = self.buffer
+                self.clear()
+                return out
+            
+            elif length < self.frame:
+                padding = self.frame - length
+                surplus = np.zeros((padding, 3, 224, 224))
+                out = np.concatenate((surplus, self.buffer), axis=0)
+                self.clear()
+                return out
+        else:
+            return None
+
+    def _preproc(self, cv2_input:np.ndarray):
+        tensor, _ = self.tranformer(cv2_input)
+        tensor = np.expand_dims(tensor, axis=0)
+        return tensor
+
+    
 
 if __name__ == '__main__':
 
