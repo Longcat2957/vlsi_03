@@ -29,7 +29,7 @@ if __name__ == '__main__':
     inference_block = PoseInferenceBlock(engine_path, 17, (256, 192))
     video_idx = 0
 
-    cam = cv2.VideoCapture('input/test11.mp4')
+    cam = cv2.VideoCapture('input/bp5.mp4')
 
     WIDTH = 640
     HEIGHT = 480

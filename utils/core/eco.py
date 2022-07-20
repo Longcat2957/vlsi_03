@@ -73,7 +73,7 @@ class EcoPostProcessor(object):
         for _ in range(self.n):
             idx = np.argmax(prediction)
             classes.append(idx)
-            prediction[idx] -= 100
+            prediction[idx] -= 10000000000000000
         return classes
 
 if __name__ == '__main__':

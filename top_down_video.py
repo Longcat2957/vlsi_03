@@ -151,6 +151,7 @@ if __name__ == '__main__':
             
             pose_img = pose_vis(roi, pdets, lines)
         cv2.imshow('bbox', yolo_img)
+        time.sleep(0.03)
 
     cv2.destroyAllWindows()
-    print('done')        
+    print('done')

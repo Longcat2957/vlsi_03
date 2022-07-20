@@ -147,7 +147,7 @@ if __name__ == '__main__':
             break
         
         vid_seq.push(orig_img)
-        print(len(vid_seq))
+        cv2.imshow('vid', orig_img)
 
 
     
