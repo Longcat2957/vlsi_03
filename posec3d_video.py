@@ -8,8 +8,8 @@ import argparse
 import time
 
 from utils.core.eco import ECOEngine, EcoPostProcessor
-from utils.ext import RoiExtractor_nc
-from utils.obj import VideoSequenceObjects
+from utils.ext import RoiExtractor
+from utils.obj import HeatmapSequenceObjects, VideoSequenceObjects
 
 from utils.core.common import Cv2PreProcessor
 from utils.core.yolo import YOLOv7Engine, YoloPostProcessor
@@ -58,16 +58,6 @@ class YOLOv7_Inference_Block(object):
 
         return x
 
-class ECO_Inference_Block(object):
-    def __init__(self, engine_path):
-        self.eco_engine = ECOEngine(engine_path, 16, (224, 224))
-        self.eco_pp = EcoPostProcessor(10)
-
-    @timer
-    def infer(self, sequence):
-        out = self.eco_engine(sequence)
-        out = self.eco_pp(out)
-        return out
 
 import cv2
 from utils.io import LoadImage
@@ -87,16 +77,37 @@ class PoseInferenceBlock(object):
     def __call__(self, input):
         return self.infer(input)
 
+    #@timer
     def infer(self, input):
         x, r = self.preprocessor(input)
-        x = self.tensorrt_engine(x)
-        x = self.postprocessor(x, r)
-        return x
+        hmap = self.tensorrt_engine(x)
+        dets = self.postprocessor(hmap, r)
+        return dets[0], dets[1], hmap
+
+from utils.core.posec3d import PoseC3dEngine, ArPostProcessor
+from utils.core.common import HeatmapResizer
+
+class PoseC3dInferenceBLock(object):
+    def __init__(self, engine_path, classes, frames, imgsz):
+        self.tensorrt_engine = PoseC3dEngine(engine_path, classes, frames, imgsz)
+        self.arpp = ArPostProcessor(5)
+
+    def __call__(self, input):
+        return self.infer(input)
+    
+
+    def infer(self, input):
+        out = self.tensorrt_engine(input)
+        pred = self.arpp(out)
+        return pred
+
+
+from utils.ext import RoiExtractor, RoiExtractor_nc
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', type=str, default='input/test6.mp4')
+    parser.add_argument('--input', type=str, default='input/test21.mp4')
     opt = parser.parse_args()
     ##################################################
     # YOLO
@@ -118,15 +129,19 @@ if __name__ == '__main__':
     pose_obj = CocoPoseObjects(True)
     pose_vis = CocoPoseVisualizer()
 
+    ##################################################
+    # PoseC3D
+    ECO_engine_path = './model/posec3d_v1.engine'
+    eco_block = PoseC3dInferenceBLock(ECO_engine_path, 17, 32, (56, 56))
 
     ###################################################
     # video
     video_file_path = opt.input
     cam = cv2.VideoCapture(video_file_path)
-
+    hrresize = HeatmapResizer((56, 56))
     ###################################################
     roi_ext = RoiExtractor_nc()
-    vid_seq = VideoSequenceObjects()    # set_default
+    vid_seq = HeatmapSequenceObjects()   # set_default
 
     t0 = time.time()
     while cv2.waitKey(1) < 1:
@@ -142,11 +157,22 @@ if __name__ == '__main__':
             rois = roi_ext(orig_img, dets)
             
             for roi in rois:
-                preds, _ = pe_block(roi)
-                pdets, lines = pose_obj(preds)
+                ppreds, _, hmap = pe_block.infer(roi)
+                pdets, lines = pose_obj(ppreds)
+                pose_img = pose_vis(roi, pdets, lines)  #
                 
-                pose_img = pose_vis(roi, pdets, lines)
+                vid_seq.push(hmap)
+        
         cv2.imshow('bbox', yolo_img)
+
+        if time.time() - t0 > 1.80:
+            out = vid_seq.pull()
+            vid_seq.clear()
+            print(out.shape)
+            result = eco_block(out)
+            print(result)
+
+            
         
 
     cv2.destroyAllWindows()

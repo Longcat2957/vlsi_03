@@ -29,20 +29,19 @@ if __name__ == '__main__':
     inference_block = PoseInferenceBlock(engine_path, 17, (256, 192))
     video_idx = 0
 
-    cam = cv2.VideoCapture('input/bp5.mp4')
+    cam = cv2.VideoCapture('input/yoyo.mp4')
 
-    WIDTH = 640
-    HEIGHT = 480
-    FRAMERATE = 30
+    # WIDTH = 640
+    # HEIGHT = 480
+    # FRAMERATE = 30
 
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
-    cam.set(cv2.CAP_PROP_FPS, FRAMERATE)
+    # cam.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+    # cam.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+    # cam.set(cv2.CAP_PROP_FPS, FRAMERATE)
 
     while cv2.waitKey(1) < 1:
         grabbed, orig_img = cam.read()
         if not grabbed:
-            print('error')
             exit()
 
 

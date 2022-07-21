@@ -40,3 +40,26 @@ class Cv2PreProcessor(object):
         padded_img = padded_img.transpose((2, 0, 1))
         padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
         return padded_img, r
+
+
+class HeatmapResizer(object):
+
+    def __init__(self, imgsz:tuple):
+        self.imgsz = imgsz
+        self.target_h, self.target_w = self.imgsz[0], self.imgsz[1]
+    
+    def __call__(self, heatmap):
+        return self._resize(heatmap)
+
+    def _resize(self, heatmap):
+        # ex. 17x64x48 --> 17x56x56
+        hmap = np.array(heatmap) # copy
+        hmap = hmap.transpose(1, 2, 0)
+        rhmap = cv2.resize(hmap, self.imgsz)
+        return rhmap.transpose(2, 0, 1)
+
+if __name__ == '__main__':
+    random = np.ndarray((17, 64, 48), dtype=np.float32)
+    myhrs = HeatmapResizer((56, 56))
+    out = myhrs.__call__(random)
+    print(f'out = {out.shape}')

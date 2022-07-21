@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from .core.common import Cv2PreProcessor
+from .core.common import Cv2PreProcessor, HeatmapResizer
 from copy import deepcopy
 
 # ROI_Extractor
@@ -120,7 +120,72 @@ class VideoSequenceObjects(object):
         tensor = np.expand_dims(tensor, axis=0)
         return tensor
 
+class HeatmapSequenceObjects(object):
+
+    def __init__(self, frame=32, joints=17, shape=(56, 56)):
+        self.frame = frame
+        self.shape = shape
+        self.joints = joints
+        self.buffer = None
+        self.tranformer = HeatmapResizer(shape)
+
+    def __bool__(self):
+        if isinstance(self.buffer, np.ndarray):
+            return True
+        else:
+            return False
+
+    def __len__(self):
+        if isinstance(self.buffer, np.ndarray):
+            T, C, H, W = self.buffer.shape
+            return T
+        else:
+            return 0
+
+    def clear(self):
+        self.buffer = None
+
+    def push(self, input):
+        input = self._preproc(input)
+        if self.buffer is None:
+            self.buffer = input
+        else:
+            self.buffer = np.concatenate((self.buffer, input), axis=0)
     
+    def pull(self):
+        if isinstance(self.buffer, np.ndarray):
+            length = len(self.buffer)
+            
+            if length > self.frame:
+                stride = length // self.frame
+                out = deepcopy(self.buffer[0:stride * (self.frame - 1) + 1:stride, :, :, :])
+                self.clear()
+                return self._expand_dims(out)
+
+            elif length == self.frame:
+                out = deepcopy(self.buffer)
+                self.clear()
+                return self._expand_dims(out)
+            
+            elif length < self.frame:
+                padding = self.frame - length
+                surplus = np.zeros((padding, self.joints, self.shape[0], self.shape[1]))
+                out = deepcopy(np.concatenate((surplus, self.buffer), axis=0))
+                self.clear()
+                return self._expand_dims(out)
+        else:
+            return None
+
+    def _preproc(self, cv2_input:np.ndarray):
+        tensor = self.tranformer(cv2_input)
+        tensor = np.expand_dims(tensor, axis=0)
+        tensor = tensor.transpose(1, 0, 2, 3)
+        tensor = np.expand_dims(tensor, axis=0)
+        return tensor
+
+    def _expand_dims(self, out:np.ndarray):
+        out1 = np.expand_dims(out, axis=0)
+        return out1
 
 if __name__ == '__main__':
 
