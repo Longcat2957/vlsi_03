@@ -97,7 +97,7 @@ class PoseInferenceBlock(object):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', type=str, default='input/test6.mp4')
+    parser.add_argument('--input', type=str, default='input/test21.mp4')
     opt = parser.parse_args()
     ##################################################
     # YOLO
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     ##################################################
     # ECO
-    ECO_engine_path = './model/eco_e57.engine'
+    ECO_engine_path = './model/eco_f.engine'
     eco_block = ECO_Inference_Block(ECO_engine_path)
 
     ###################################################
@@ -144,19 +144,18 @@ if __name__ == '__main__':
         yolo_img = yolo_vis(orig_img, dets)
 
 
-        rois = roi_ext(orig_img, dets)
-        for roi in rois:
-            vid_seq.push(roi)
-        
-        if time.time() - t0 > 1.7:
-            seq = vid_seq.pull()
-            classes = eco_block.infer(seq)
-            print(classes)
-            vid_seq.clear()
-            del seq
-            t0 = time.time()
+        if dets is not None:
+            rois = roi_ext(orig_img, dets)
+            for roi in rois:
+                vid_seq.push(roi)
+            
+            if time.time() - t0 > 1.7:
+                seq = vid_seq.pull()
+                classes = eco_block.infer(seq)
+                print(classes)
+                t0 = time.time()
 
-        cv2.imshow('bbox', yolo_img)
+        #cv2.imshow('bbox', yolo_img)
 
     cv2.destroyAllWindows()
     print('done')        

@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from .core.common import Cv2PreProcessor, HeatmapResizer
+from .core.common import Cv2PreProcessor, HeatmapResizer, EcoResizer
 from copy import deepcopy
 
 # ROI_Extractor
@@ -66,7 +66,7 @@ class VideoSequenceObjects(object):
         self.frame = frame
         self.shape = shape
         self.buffer = None
-        self.tranformer = Cv2PreProcessor(shape)
+        self.tranformer = EcoResizer(shape)
 
     def __bool__(self):
         if isinstance(self.buffer, np.ndarray):
@@ -108,7 +108,7 @@ class VideoSequenceObjects(object):
             
             elif length < self.frame:
                 padding = self.frame - length
-                surplus = np.zeros((padding, 3, 224, 224))
+                surplus = np.zeros((padding, 3, self.shape[0], self.shape[1]))
                 out = deepcopy(np.concatenate((surplus, self.buffer), axis=0))
                 self.clear()
                 return out
@@ -116,7 +116,7 @@ class VideoSequenceObjects(object):
             return None
 
     def _preproc(self, cv2_input:np.ndarray):
-        tensor, _ = self.tranformer(cv2_input)
+        tensor = self.tranformer(cv2_input)
         tensor = np.expand_dims(tensor, axis=0)
         return tensor
 
@@ -178,8 +178,6 @@ class HeatmapSequenceObjects(object):
 
     def _preproc(self, cv2_input:np.ndarray):
         tensor = self.tranformer(cv2_input)
-        tensor = np.expand_dims(tensor, axis=0)
-        tensor = tensor.transpose(1, 0, 2, 3)
         tensor = np.expand_dims(tensor, axis=0)
         return tensor
 

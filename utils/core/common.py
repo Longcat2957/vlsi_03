@@ -58,6 +58,23 @@ class HeatmapResizer(object):
         rhmap = cv2.resize(hmap, self.imgsz)
         return rhmap.transpose(2, 0, 1)
 
+class EcoResizer(object):
+
+    def __init__(self, imgsz:tuple):
+        self.imgsz = imgsz
+        self.target_h, self.target_w = self.imgsz[0], self.imgsz[1]
+    
+    def __call__(self, roi):
+        return self._resize(roi)
+    
+    def _resize(self, roi):
+        hmap = np.array(roi)
+        rhmap = cv2.resize(hmap, self.imgsz).astype(np.float32)
+        rhmap = rhmap[:,:,::-1]
+        rhmap /= 255.0
+        return rhmap.transpose(2, 0, 1)
+
+
 if __name__ == '__main__':
     random = np.ndarray((17, 64, 48), dtype=np.float32)
     myhrs = HeatmapResizer((56, 56))
