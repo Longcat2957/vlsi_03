@@ -169,8 +169,7 @@ if __name__ == '__main__':
             out = vid_seq.pull()
             vid_seq.clear()
             print(out.shape)
-            result = eco_block(out)
-            print(result)
+
 
             
         
