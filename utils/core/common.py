@@ -3,6 +3,7 @@ import pycuda.autoinit
 import pycuda.driver as cuda
 import numpy as np
 import cv2
+import albumentations as A
 
 class Cv2PreProcessor(object):
     """
@@ -16,6 +17,9 @@ class Cv2PreProcessor(object):
         self.imgsz = imgsz  # 목표로 하는 크기
         self.target_h, self.target_w = self.imgsz[0], self.imgsz[1]
         self.area = self.imgsz[0] * self.imgsz[1] # 면적의 크기, 보간법을 서로 다르게 한다.
+        self.normalizer = A.Compose([
+            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        ])
 
     def __call__(self, raw_input):
         return  self._preproc(raw_input)
@@ -35,7 +39,8 @@ class Cv2PreProcessor(object):
         ).astype(np.float32)
         padded_img[: int(img.shape[0] * r), : int(img.shape[1] * r)] = resized_img
         padded_img = padded_img[:, :, ::-1]
-        padded_img /= 255.0
+
+        padded_img = self.normalizer(image=padded_img)["image"]
 
         padded_img = padded_img.transpose((2, 0, 1))
         padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
