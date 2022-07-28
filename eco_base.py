@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import argparse
 from copy import deepcopy
+import pickle
 
 import time
 
@@ -123,7 +124,7 @@ if __name__ == '__main__':
 
     ##################################################
     # ECO
-    ECO_engine_path = './model/eco_11p_f_v2.engine'
+    ECO_engine_path = './model/eco.engine'
     eco_block = ECO_Inference_Block(ECO_engine_path)
 
     ###################################################
@@ -137,18 +138,17 @@ if __name__ == '__main__':
 
     print(f'video_file = {video_file_path}')
     t0 = time.time()
-    while cv2.waitKey(1) < 1:
+    while True:
         grabbed, orig_img = cam.read()
         if not grabbed:
-            out = vid_seq.pull()
-            vid_seq.clear()
-            classes = eco_block.infer(out)
+            seq = vid_seq.pull()
+            print(f'seq shape = {seq.shape}')
+            print(f'seq data = {seq}')
+            classes = eco_block.infer(seq)
             print(classes)
             break
-        
+
+        oirg_img = cv2.cvtColor(orig_img, cv2.COLOR_BGR2RGB)
         vid_seq.push(orig_img)
-        cv2.imshow('vid', orig_img)
-
-
-    
+        
     print('done')        
