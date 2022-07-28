@@ -76,7 +76,8 @@ class EcoResizer(object):
         hmap = np.array(roi)
         rhmap = cv2.resize(hmap, self.imgsz).astype(np.float32)
         rhmap = rhmap[:,:,::-1]
-        rhmap /= 255.0
+        rhmap *= 255
+        rhmap = A.normalize(rhmap, mean=[104, 117, 123], std=[1, 1, 1])
         return rhmap.transpose(2, 0, 1)
 
 
