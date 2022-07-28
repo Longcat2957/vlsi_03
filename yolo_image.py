@@ -40,7 +40,7 @@ class YOLOv7_Inference_Block(object):
         self.tensorrt_engine = YOLOv7Engine(self.engine_path, self.infer_size)
         self.postprocessor = YoloPostProcessor()
 
-    @timer
+    @timer  
     def infer(self, input):
         x, r = self.preprocessor(input)
         x = self.tensorrt_engine(x)
